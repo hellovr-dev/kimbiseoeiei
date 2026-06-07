@@ -802,90 +802,102 @@
     }
     updateIcon();
 
-    // ── Supabase fetch ────────────────────────────────────────────
-    const SUPA_URL  = 'https://xzhdkouqdavucqfqkdrl.supabase.co';
-    const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6aGRrb3VxZGF2dWNxZnFrZHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzMDQ3OTMsImV4cCI6MjA4Mzg4MDc5M30.5iwX3b6mB1DiFnsyP7UCYXkkDIT7VQYeoEXbst8dkqo';
+    // ── Supabase ──────────────────────────────────────────────────
+    const SUPA_URL  =  + SUPA_URL + ;
+    const SUPA_ANON =  + SUPA_ANON + ;
 
-    async function sbGet(table, qs = '') {
-      const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${qs}`, {
-        headers: { 'apikey': SUPA_ANON, 'Authorization': `Bearer ${SUPA_ANON}` }
+    async function sbGet(table, qs) {
+      const url = SUPA_URL + '/rest/v1/' + table + (qs ? '?' + qs : '');
+      const res = await fetch(url, {
+        headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
       });
       return res.json();
     }
 
     const priorityClass = { '높음': 'high', '보통': 'medium', '낮음': 'low' };
-    const statusColor   = s => ({'마무리':'#10b981','진행중':'#6366f1','준비중':'#f59e0b','기획중':'#9ca3af'}[s] || '#6366f1');
-    const fmtDate       = d => { if (!d) return '-'; const [,m,dy] = d.split('-'); return `${+m}/${+dy}`; };
+    const statusColor   = function(s) {
+      return { '마무리':'#10b981','진행중':'#6366f1','준비중':'#f59e0b','기획중':'#9ca3af' }[s] || '#6366f1';
+    };
+    const fmtDate = function(d) {
+      if (!d) return '-';
+      var p = d.split('-'); return (+p[1]) + '/' + (+p[2]);
+    };
 
     async function loadDashboard() {
-      // ── 할 일 ──────────────────────────────────────────────────
-      const tasks    = await sbGet('kimbiseo_tasks', 'order=id.asc');
-      const taskList = document.getElementById('taskList');
-      document.getElementById('taskList').closest('.card').querySelector('.card-count').textContent = tasks.length + '개';
-      tasks.forEach((t, i) => {
-        const done = t.status === '완료';
-        const div  = document.createElement('div');
+
+      // ── 할 일 ─────────────────────────────────────────────────
+      var tasks = await sbGet('kimbiseo_tasks', 'order=id.asc');
+      var taskList = document.getElementById('taskList');
+      taskList.closest('.card').querySelector('.card-count').textContent = tasks.length + '개';
+      tasks.forEach(function(t, i) {
+        var done = t.status === '완료';
+        var div  = document.createElement('div');
         div.className = 'task-item' + (done ? ' done' : '');
-        div.innerHTML = `
-          <input type="checkbox" class="task-checkbox" id="task${i}" ${done ? 'checked' : ''}>
-          <label for="task${i}" class="task-name">${t.name}</label>
-          <div class="task-meta">
-            <span class="priority-badge badge-${priorityClass[t.priority]}">${t.priority}</span>
-            <span class="task-assignee">${t.assignee || ''}</span>
-            <span class="task-date">${fmtDate(t.due_date)}</span>
-          </div>`;
+        var pc = priorityClass[t.priority] || 'medium';
+        div.innerHTML =
+          '<input type="checkbox" class="task-checkbox" id="task' + i + '"' + (done ? ' checked' : '') + '>' +
+          '<label for="task' + i + '" class="task-name">' + (t.name || '') + '</label>' +
+          '<div class="task-meta">' +
+            '<span class="priority-badge badge-' + pc + '">' + (t.priority || '') + '</span>' +
+            '<span class="task-assignee">' + (t.assignee || '') + '</span>' +
+            '<span class="task-date">' + fmtDate(t.due_date) + '</span>' +
+          '</div>';
         div.querySelector('.task-checkbox').addEventListener('change', function() {
           div.classList.toggle('done', this.checked);
         });
         taskList.appendChild(div);
       });
 
-      // ── 프로젝트 ───────────────────────────────────────────────
-      const projects    = await sbGet('kimbiseo_projects', 'order=progress.desc');
-      const projectList = document.getElementById('projectList');
-      document.getElementById('projectList').closest('.card').querySelector('.card-count').textContent = projects.length + '개';
-      projects.forEach(p => {
-        const div = document.createElement('div');
+      // ── 프로젝트 ──────────────────────────────────────────────
+      var projects = await sbGet('kimbiseo_projects', 'order=progress.desc');
+      var projectList = document.getElementById('projectList');
+      projectList.closest('.card').querySelector('.card-count').textContent = projects.length + '개';
+      projects.forEach(function(p) {
+        var div = document.createElement('div');
         div.className = 'project-item';
-        div.innerHTML = `
-          <div class="project-header">
-            <div class="project-name">${p.name}</div>
-            <div class="project-info">
-              <span class="project-assignee">${p.assignee}</span>
-              <span class="project-percent">${p.progress}%</span>
-            </div>
-          </div>
-          <div class="progress-track">
-            <div class="progress-bar" style="width:${p.progress}%;background:${statusColor(p.status)}"></div>
-          </div>
-          <span class="status-badge status-${p.status}">${p.status}</span>`;
+        div.innerHTML =
+          '<div class="project-header">' +
+            '<div class="project-name">' + (p.name || '') + '</div>' +
+            '<div class="project-info">' +
+              '<span class="project-assignee">' + (p.assignee || '') + '</span>' +
+              '<span class="project-percent">' + (p.progress || 0) + '%</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="progress-track">' +
+            '<div class="progress-bar" style="width:' + (p.progress || 0) + '%;background:' + statusColor(p.status) + '"></div>' +
+          '</div>' +
+          '<span class="status-badge status-' + (p.status || '') + '">' + (p.status || '') + '</span>';
         projectList.appendChild(div);
       });
 
-      // ── 일기 ───────────────────────────────────────────────────
-      const diaries   = await sbGet('kimbiseo_diaries', 'order=date.desc');
-      const diaryList = document.getElementById('diaryList');
+      // ── 일기 ──────────────────────────────────────────────────
+      var diaries  = await sbGet('kimbiseo_diaries', 'order=date.desc');
+      var diaryList = document.getElementById('diaryList');
       document.getElementById('diaryCount').textContent = diaries.length + '개';
-      diaries.forEach(d => {
-        const kws     = Array.isArray(d.keywords) ? d.keywords : (d.keywords||'').replace(/[{}]/g,'').split(',').filter(Boolean);
-        const preview = (d.content||'').split('
-').find(l => l.trim()) || '';
-        const [y,m,dy] = (d.date||'').split('-');
-        const label   = `${+y}년 ${+m}월 ${+dy}일`;
-        const div     = document.createElement('div');
+      diaries.forEach(function(d) {
+        var kws = Array.isArray(d.keywords)
+          ? d.keywords
+          : (d.keywords || '').replace(/[{}]/g, '').split(',').filter(Boolean);
+        var lines   = (d.content || '').split(/[\r\n]+/);
+        var preview = '';
+        for (var i = 0; i < lines.length; i++) { if (lines[i].trim()) { preview = lines[i].trim(); break; } }
+        var dp   = (d.date || '').split('-');
+        var label = (+dp[0]) + '년 ' + (+dp[1]) + '월 ' + (+dp[2]) + '일';
+        var kwHtml = kws.map(function(k) { return '<span class="diary-kw">' + k + '</span>'; }).join('');
+        var div = document.createElement('div');
         div.className = 'diary-item';
-        div.innerHTML = `
-          <div class="diary-header">
-            <div class="diary-date-badge">
-              <span class="diary-emoji">${d.emoji}</span>
-              <span class="diary-date">${label}</span>
-            </div>
-            <div class="diary-keywords">${kws.map(k => `<span class="diary-kw">${k}</span>`).join('')}</div>
-          </div>
-          <div class="diary-preview">${preview}</div>
-          <div class="diary-body">${d.content||''}</div>
-          <div class="diary-record">📊 ${d.record||''}</div>`;
-        div.addEventListener('click', () => div.classList.toggle('open'));
+        div.innerHTML =
+          '<div class="diary-header">' +
+            '<div class="diary-date-badge">' +
+              '<span class="diary-emoji">' + (d.emoji || '') + '</span>' +
+              '<span class="diary-date">' + label + '</span>' +
+            '</div>' +
+            '<div class="diary-keywords">' + kwHtml + '</div>' +
+          '</div>' +
+          '<div class="diary-preview">' + preview + '</div>' +
+          '<div class="diary-body">' + (d.content || '') + '</div>' +
+          '<div class="diary-record">📊 ' + (d.record || '') + '</div>';
+        div.addEventListener('click', function() { div.classList.toggle('open'); });
         diaryList.appendChild(div);
       });
     }
