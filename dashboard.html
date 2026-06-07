@@ -802,115 +802,95 @@
     }
     updateIcon();
 
-    // Tasks
-    const tasks = [
-      { name: '파트너사 계약서 검토',        priority: '높음', status: '대기',   assignee: '정팀장', date: '3/11' },
-      { name: '3월 프로모션 기획안 작성',     priority: '높음', status: '진행중', assignee: '김대리', date: '3/12' },
-      { name: '인플루언서 미팅 일정 잡기',    priority: '높음', status: '대기',   assignee: '이과장', date: '3/14' },
-      { name: '4월 신제품 티저 콘텐츠 기획',  priority: '높음', status: '대기',   assignee: '정팀장', date: '3/21' },
-      { name: '월간 마케팅 보고서 작성',      priority: '높음', status: '대기',   assignee: '김대리', date: '3/31' },
-      { name: '고객 설문조사 결과 분석',      priority: '보통', status: '진행중', assignee: '정팀장', date: '3/13' },
-      { name: '영상 광고 3개 추가 제작',      priority: '보통', status: '진행중', assignee: '박사원', date: '3/14' },
-      { name: '경쟁사 C사 캠페인 분석',       priority: '보통', status: '대기',   assignee: '박사원', date: '3/16' },
-      { name: '블로그 포스트 2건 작성',       priority: '낮음', status: '대기',   assignee: '이과장', date: '3/18' },
-      { name: 'SNS 계정 주간 콘텐츠 업로드',  priority: '보통', status: '완료',   assignee: '김대리', date: '3/10' },
-      { name: '워크숍 후기 작성하기',          priority: '높음', status: '대기',   assignee: '',       date: '6/12' },
-    ];
-    const priorityClass = { '높음': 'high', '보통': 'medium', '낮음': 'low' };
-    const taskList = document.getElementById('taskList');
-    tasks.forEach((t, i) => {
-      const done = t.status === '완료';
-      const div = document.createElement('div');
-      div.className = 'task-item' + (done ? ' done' : '');
-      div.innerHTML = `
-        <input type="checkbox" class="task-checkbox" id="task${i}" ${done ? 'checked' : ''}>
-        <label for="task${i}" class="task-name">${t.name}</label>
-        <div class="task-meta">
-          <span class="priority-badge badge-${priorityClass[t.priority]}">${t.priority}</span>
-          <span class="task-assignee">${t.assignee}</span>
-          <span class="task-date">${t.date}</span>
-        </div>`;
-      div.querySelector('.task-checkbox').addEventListener('change', function() {
-        div.classList.toggle('done', this.checked);
+    // ── Supabase fetch ────────────────────────────────────────────
+    const SUPA_URL  = 'https://xzhdkouqdavucqfqkdrl.supabase.co';
+    const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6aGRrb3VxZGF2dWNxZnFrZHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzMDQ3OTMsImV4cCI6MjA4Mzg4MDc5M30.5iwX3b6mB1DiFnsyP7UCYXkkDIT7VQYeoEXbst8dkqo';
+
+    async function sbGet(table, qs = '') {
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${qs}`, {
+        headers: { 'apikey': SUPA_ANON, 'Authorization': `Bearer ${SUPA_ANON}` }
       });
-      taskList.appendChild(div);
-    });
+      return res.json();
+    }
 
-    // Projects
-    const projects = [
-      { name: '유튜브 채널 리뉴얼',    pct: 80, status: '마무리', assignee: '박사원', color: '#10b981' },
-      { name: '봄맞이 프로모션',        pct: 65, status: '진행중', assignee: '김대리', color: '#6366f1' },
-      { name: '홈페이지 리뉴얼',        pct: 45, status: '진행중', assignee: '이과장', color: '#6366f1' },
-      { name: '인플루언서 협업',        pct: 35, status: '진행중', assignee: '이과장', color: '#6366f1' },
-      { name: '신제품 런칭 캠페인',     pct: 20, status: '준비중', assignee: '정팀장', color: '#f59e0b' },
-      { name: '고객 리텐션 프로그램',   pct: 10, status: '기획중', assignee: '정팀장', color: '#9ca3af' },
-    ];
-    const projectList = document.getElementById('projectList');
-    projects.forEach(p => {
-      const div = document.createElement('div');
-      div.className = 'project-item';
-      div.innerHTML = `
-        <div class="project-header">
-          <div class="project-name">${p.name}</div>
-          <div class="project-info">
-            <span class="project-assignee">${p.assignee}</span>
-            <span class="project-percent">${p.pct}%</span>
+    const priorityClass = { '높음': 'high', '보통': 'medium', '낮음': 'low' };
+    const statusColor   = s => ({'마무리':'#10b981','진행중':'#6366f1','준비중':'#f59e0b','기획중':'#9ca3af'}[s] || '#6366f1');
+    const fmtDate       = d => { if (!d) return '-'; const [,m,dy] = d.split('-'); return `${+m}/${+dy}`; };
+
+    async function loadDashboard() {
+      // ── 할 일 ──────────────────────────────────────────────────
+      const tasks    = await sbGet('kimbiseo_tasks', 'order=id.asc');
+      const taskList = document.getElementById('taskList');
+      document.getElementById('taskList').closest('.card').querySelector('.card-count').textContent = tasks.length + '개';
+      tasks.forEach((t, i) => {
+        const done = t.status === '완료';
+        const div  = document.createElement('div');
+        div.className = 'task-item' + (done ? ' done' : '');
+        div.innerHTML = `
+          <input type="checkbox" class="task-checkbox" id="task${i}" ${done ? 'checked' : ''}>
+          <label for="task${i}" class="task-name">${t.name}</label>
+          <div class="task-meta">
+            <span class="priority-badge badge-${priorityClass[t.priority]}">${t.priority}</span>
+            <span class="task-assignee">${t.assignee || ''}</span>
+            <span class="task-date">${fmtDate(t.due_date)}</span>
+          </div>`;
+        div.querySelector('.task-checkbox').addEventListener('change', function() {
+          div.classList.toggle('done', this.checked);
+        });
+        taskList.appendChild(div);
+      });
+
+      // ── 프로젝트 ───────────────────────────────────────────────
+      const projects    = await sbGet('kimbiseo_projects', 'order=progress.desc');
+      const projectList = document.getElementById('projectList');
+      document.getElementById('projectList').closest('.card').querySelector('.card-count').textContent = projects.length + '개';
+      projects.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'project-item';
+        div.innerHTML = `
+          <div class="project-header">
+            <div class="project-name">${p.name}</div>
+            <div class="project-info">
+              <span class="project-assignee">${p.assignee}</span>
+              <span class="project-percent">${p.progress}%</span>
+            </div>
           </div>
-        </div>
-        <div class="progress-track">
-          <div class="progress-bar" style="width:${p.pct}%;background:${p.color}"></div>
-        </div>
-        <span class="status-badge status-${p.status}">${p.status}</span>`;
-      projectList.appendChild(div);
-    });
-
-    // ── 일기 ──
-    const diaries = [
-      {
-        date: '2026-06-07',
-        label: '2026년 6월 7일 토요일',
-        emoji: '☀️',
-        keywords: ['마라톤', '완주', '42.195km'],
-        preview: '새벽 4시 반, 알람이 울리기도 전에 눈이 떠졌다. 심장이 이미 알고 있었던 것 같다. 오늘이 그 날이라는 걸.',
-        record: '기록: 5시간 12분 33초 · 52,000보 · 2,847kcal',
-        body: `새벽 4시 반, 알람이 울리기도 전에 눈이 떠졌다.
-심장이 이미 알고 있었던 것 같다. 오늘이 그 날이라는 걸.
-
-스타트 라인에 섰을 때 수천 명의 사람들이 있었지만 이상하게도 혼자인 느낌이 들었다. 모두가 각자의 이유로 달리고 있었다. 나는 내 이유로 달렸다.
-
-처음 10km는 거짓말처럼 가벼웠다. 발이 땅에 닿지 않는 것 같았고, 바람이 등을 밀어주는 것 같았다. 20km 지점부터 다리가 무거워졌다. 옆에서 달리던 중년 남성이 "그럼 지금이 제일 힘들 때에요. 나머지 절반은 머리로 달리는 거야." 하고는 앞서 나갔다.
-
-30km 지점, 사람들이 말하는 '벽'이 거기 있었다. 발바닥이 불타는 것 같았고, 허벅지는 굳어가는 시멘트 같았다. 하지만 한 번 걷기 시작하면 다시 뛰지 못할 것 같은 예감이 들었다. 그래서 달렸다.
-
-길가에 서 있던 아이가 내게 손을 내밀었다. 하이파이브였다. 그 순간만큼은 다리가 가벼워졌다.
-
-42.195km. 결승선 테이프를 끊는 순간, 다리가 아직 움직이고 싶어했다. 몇 걸음을 더 가다가 멈춰서 뒤를 돌아봤다. 내가 방금 저길 다 달려왔구나.
-
-집에 돌아와 소파에 쓰러졌다. 온몸이 욱신거렸다. 발가락 하나하나가 각각 다른 악기처럼 아팠다. 하지만 이상하게도, 기분이 좋았다.
-
-오늘 하루, 나는 42.195km를 달렸다. 그것만으로 충분하다.`
-      },
-    ];
-
-    document.getElementById('diaryCount').textContent = diaries.length + '개';
-    const diaryList = document.getElementById('diaryList');
-    diaries.forEach(d => {
-      const div = document.createElement('div');
-      div.className = 'diary-item';
-      div.innerHTML = `
-        <div class="diary-header">
-          <div class="diary-date-badge">
-            <span class="diary-emoji">${d.emoji}</span>
-            <span class="diary-date">${d.label}</span>
+          <div class="progress-track">
+            <div class="progress-bar" style="width:${p.progress}%;background:${statusColor(p.status)}"></div>
           </div>
-          <div class="diary-keywords">${d.keywords.map(k => `<span class="diary-kw">${k}</span>`).join('')}</div>
-        </div>
-        <div class="diary-preview">${d.preview}</div>
-        <div class="diary-body">${d.body}</div>
-        <div class="diary-record">📊 ${d.record}</div>`;
-      div.addEventListener('click', () => div.classList.toggle('open'));
-      diaryList.appendChild(div);
-    });
+          <span class="status-badge status-${p.status}">${p.status}</span>`;
+        projectList.appendChild(div);
+      });
+
+      // ── 일기 ───────────────────────────────────────────────────
+      const diaries   = await sbGet('kimbiseo_diaries', 'order=date.desc');
+      const diaryList = document.getElementById('diaryList');
+      document.getElementById('diaryCount').textContent = diaries.length + '개';
+      diaries.forEach(d => {
+        const kws     = Array.isArray(d.keywords) ? d.keywords : (d.keywords||'').replace(/[{}]/g,'').split(',').filter(Boolean);
+        const preview = (d.content||'').split('
+').find(l => l.trim()) || '';
+        const [y,m,dy] = (d.date||'').split('-');
+        const label   = `${+y}년 ${+m}월 ${+dy}일`;
+        const div     = document.createElement('div');
+        div.className = 'diary-item';
+        div.innerHTML = `
+          <div class="diary-header">
+            <div class="diary-date-badge">
+              <span class="diary-emoji">${d.emoji}</span>
+              <span class="diary-date">${label}</span>
+            </div>
+            <div class="diary-keywords">${kws.map(k => `<span class="diary-kw">${k}</span>`).join('')}</div>
+          </div>
+          <div class="diary-preview">${preview}</div>
+          <div class="diary-body">${d.content||''}</div>
+          <div class="diary-record">📊 ${d.record||''}</div>`;
+        div.addEventListener('click', () => div.classList.toggle('open'));
+        diaryList.appendChild(div);
+      });
+    }
+
+    loadDashboard();
   </script>
   <script>
     if ('serviceWorker' in navigator) {

@@ -230,28 +230,41 @@
     const comma  = n => n.toLocaleString('ko-KR');
     const toMan  = n => Math.round(n / 10000).toLocaleString('ko-KR');
 
-    // ── Data ──
-    const daily = [
-      { date: '1/5',  label: '1월 5일',  total: 7075000 },
-      { date: '1/8',  label: '1월 8일',  total: 8413000 },
-      { date: '1/12', label: '1월 12일', total: 4135000 },
-      { date: '1/15', label: '1월 15일', total: 8122000 },
-      { date: '1/19', label: '1월 19일', total: 5060000 },
-      { date: '1/22', label: '1월 22일', total: 9029000 },
-      { date: '1/26', label: '1월 26일', total: 4665000 },
-      { date: '2/1',  label: '2월 1일',  total: 10110000 },
-      { date: '2/5',  label: '2월 5일',  total: 6195000 },
-      { date: '2/10', label: '2월 10일', total: 8202000 },
-    ];
+    // ── Supabase fetch ────────────────────────────────────────────
+    const SUPA_URL  = 'https://xzhdkouqdavucqfqkdrl.supabase.co';
+    const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6aGRrb3VxZGF2dWNxZnFrZHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzMDQ3OTMsImV4cCI6MjA4Mzg4MDc5M30.5iwX3b6mB1DiFnsyP7UCYXkkDIT7VQYeoEXbst8dkqo';
 
-    const products = [
-      { name: '무선 이어폰',     total: 28836000, color: '#2563eb' },
-      { name: '텀블러',          total: 11525000, color: '#10b981' },
-      { name: '블루투스 스피커', total: 9600000,  color: '#0ea5e9' },
-      { name: '보조배터리',      total: 9030000,  color: '#06b6d4' },
-      { name: '에코백',          total: 6165000,  color: '#34d399' },
-      { name: '무선 충전기',     total: 5850000,  color: '#38bdf8' },
-    ];
+    const PRODUCT_COLORS = {
+      '무선 이어폰':'#2563eb', '텀블러':'#10b981',
+      '블루투스 스피커':'#0ea5e9', '보조배터리':'#06b6d4',
+      '에코백':'#34d399', '무선 충전기':'#38bdf8'
+    };
+
+    async function loadChartData() {
+      const res   = await fetch(`${SUPA_URL}/rest/v1/kimbiseo_sales?order=date.asc`, {
+        headers: { 'apikey': SUPA_ANON, 'Authorization': `Bearer ${SUPA_ANON}` }
+      });
+      const rows  = await res.json();
+
+      // 일별 합계
+      const byDate = {};
+      const byProd = {};
+      rows.forEach(r => {
+        byDate[r.date] = (byDate[r.date] || 0) + r.amount;
+        byProd[r.product] = (byProd[r.product] || 0) + r.amount;
+      });
+
+      const daily = Object.entries(byDate).map(([date, total]) => {
+        const [,m,d] = date.split('-');
+        return { date: `${+m}/${+d}`, label: `${+m}월 ${+d}일`, total };
+      });
+
+      const products = Object.entries(byProd)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, total]) => ({ name, total, color: PRODUCT_COLORS[name] || '#6366f1' }));
+
+      return { daily, products, rows };
+    }
 
     // ── Tooltip ──
     const tip      = document.getElementById('tooltip');
@@ -281,7 +294,7 @@
     }
 
     // ── Line Chart ──
-    function drawLine() {
+    function drawLine(daily) {
       const cont = document.getElementById('lineArea');
       const W = cont.clientWidth || 820;
       const H = 300;
@@ -363,7 +376,7 @@
     }
 
     // ── Bar Chart ──
-    function drawBar() {
+    function drawBar(products) {
       const cont = document.getElementById('barArea');
       const W = cont.clientWidth || 820;
       const H = 300;
@@ -446,9 +459,14 @@
     }
 
     // ── Init + resize ──
-    drawLine();
-    drawBar();
-    window.addEventListener('resize', () => { drawLine(); drawBar(); });
+    loadChartData().then(({ daily, products, rows }) => {
+      const total = rows.reduce((s, r) => s + r.amount, 0);
+      drawLine(daily);
+      drawBar(products);
+    });
+    window.addEventListener('resize', () => {
+      loadChartData().then(({ daily, products }) => { drawLine(daily); drawBar(products); });
+    });
   </script>
   <script>
     const _p = location.pathname.split('/').pop();
