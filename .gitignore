@@ -2,6 +2,10 @@
 Thumbs.db
 *.log
 
+# 환경 변수
+.env.local
+.env*.local
+
 # 데이터 파일 — Supabase에 저장됨, GitHub에 올리지 않음
 김비서-데이터/
 일기/
