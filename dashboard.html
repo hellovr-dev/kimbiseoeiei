@@ -475,6 +475,83 @@
       white-space: nowrap;
       transition: color 0.3s;
     }
+
+    /* ── 5. 일기 ── */
+    .diary-card { grid-column: span 2; }
+
+    .diary-list { display: flex; flex-direction: column; gap: 14px; }
+
+    .diary-item {
+      background: var(--item-bg);
+      border: 1px solid var(--item-border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .diary-item:hover { filter: brightness(1.04); }
+
+    .diary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .diary-date-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .diary-emoji { font-size: 18px; }
+    .diary-date {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-text);
+      transition: color 0.3s;
+    }
+    .diary-keywords {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .diary-kw {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-text);
+      transition: all 0.3s;
+    }
+    .diary-preview {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      transition: color 0.3s;
+    }
+    .diary-record {
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: color 0.3s;
+    }
+    .diary-body {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--table-border);
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.85;
+      white-space: pre-wrap;
+      transition: color 0.3s;
+    }
+    .diary-item.open .diary-preview { display: none; }
+    .diary-item.open .diary-body { display: block; }
   </style>
   <script>
     (function() {
@@ -607,6 +684,15 @@
       </div>
     </div>
 
+    <!-- ⑤ 일기 -->
+    <div class="card diary-card">
+      <div class="card-header">
+        <div class="card-title">📔 나의 일기</div>
+        <div class="card-count" id="diaryCount"></div>
+      </div>
+      <div class="diary-list" id="diaryList"></div>
+    </div>
+
   </div>
 
   <script>
@@ -688,6 +774,54 @@
         </div>
         <span class="status-badge status-${p.status}">${p.status}</span>`;
       projectList.appendChild(div);
+    });
+
+    // ── 일기 ──
+    const diaries = [
+      {
+        date: '2026-06-07',
+        label: '2026년 6월 7일 토요일',
+        emoji: '☀️',
+        keywords: ['마라톤', '완주', '42.195km'],
+        preview: '새벽 4시 반, 알람이 울리기도 전에 눈이 떠졌다. 심장이 이미 알고 있었던 것 같다. 오늘이 그 날이라는 걸.',
+        record: '기록: 5시간 12분 33초 · 52,000보 · 2,847kcal',
+        body: `새벽 4시 반, 알람이 울리기도 전에 눈이 떠졌다.
+심장이 이미 알고 있었던 것 같다. 오늘이 그 날이라는 걸.
+
+스타트 라인에 섰을 때 수천 명의 사람들이 있었지만 이상하게도 혼자인 느낌이 들었다. 모두가 각자의 이유로 달리고 있었다. 나는 내 이유로 달렸다.
+
+처음 10km는 거짓말처럼 가벼웠다. 발이 땅에 닿지 않는 것 같았고, 바람이 등을 밀어주는 것 같았다. 20km 지점부터 다리가 무거워졌다. 옆에서 달리던 중년 남성이 "그럼 지금이 제일 힘들 때에요. 나머지 절반은 머리로 달리는 거야." 하고는 앞서 나갔다.
+
+30km 지점, 사람들이 말하는 '벽'이 거기 있었다. 발바닥이 불타는 것 같았고, 허벅지는 굳어가는 시멘트 같았다. 하지만 한 번 걷기 시작하면 다시 뛰지 못할 것 같은 예감이 들었다. 그래서 달렸다.
+
+길가에 서 있던 아이가 내게 손을 내밀었다. 하이파이브였다. 그 순간만큼은 다리가 가벼워졌다.
+
+42.195km. 결승선 테이프를 끊는 순간, 다리가 아직 움직이고 싶어했다. 몇 걸음을 더 가다가 멈춰서 뒤를 돌아봤다. 내가 방금 저길 다 달려왔구나.
+
+집에 돌아와 소파에 쓰러졌다. 온몸이 욱신거렸다. 발가락 하나하나가 각각 다른 악기처럼 아팠다. 하지만 이상하게도, 기분이 좋았다.
+
+오늘 하루, 나는 42.195km를 달렸다. 그것만으로 충분하다.`
+      },
+    ];
+
+    document.getElementById('diaryCount').textContent = diaries.length + '개';
+    const diaryList = document.getElementById('diaryList');
+    diaries.forEach(d => {
+      const div = document.createElement('div');
+      div.className = 'diary-item';
+      div.innerHTML = `
+        <div class="diary-header">
+          <div class="diary-date-badge">
+            <span class="diary-emoji">${d.emoji}</span>
+            <span class="diary-date">${d.label}</span>
+          </div>
+          <div class="diary-keywords">${d.keywords.map(k => `<span class="diary-kw">${k}</span>`).join('')}</div>
+        </div>
+        <div class="diary-preview">${d.preview}</div>
+        <div class="diary-body">${d.body}</div>
+        <div class="diary-record">📊 ${d.record}</div>`;
+      div.addEventListener('click', () => div.classList.toggle('open'));
+      diaryList.appendChild(div);
     });
   </script>
   <script>
