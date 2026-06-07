@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>김비서를 소개합니다</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #f0f2ff 0%, #e8ecff 40%, #f5f0ff 70%, #fdf4ff 100%);
+      --glass: rgba(255,255,255,0.65);
+      --glass-border: rgba(255,255,255,0.85);
+      --glass-shadow: 0 8px 48px rgba(99,102,241,0.14), 0 2px 12px rgba(0,0,0,0.04);
+      --text-primary: #1e1e2e;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --accent: #6366f1;
+      --accent-soft: rgba(99,102,241,0.1);
+      --accent-text: #6366f1;
+      --feature-bg: rgba(255,255,255,0.45);
+      --feature-border: rgba(255,255,255,0.7);
+      --toggle-bg: rgba(255,255,255,0.55);
+      --toggle-border: rgba(255,255,255,0.75);
+      --orb1: rgba(167,139,250,0.45);
+      --orb2: rgba(96,165,250,0.32);
+      --orb3: rgba(244,114,182,0.28);
+    }
+    html.dark {
+      --bg: linear-gradient(135deg, #0f0f23 0%, #16163a 50%, #0f0f23 100%);
+      --glass: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.12);
+      --glass-shadow: 0 8px 48px rgba(0,0,0,0.55), 0 2px 12px rgba(0,0,0,0.35);
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0c0;
+      --text-muted: #60608a;
+      --accent: #818cf8;
+      --accent-soft: rgba(129,140,248,0.15);
+      --accent-text: #a5b4fc;
+      --feature-bg: rgba(255,255,255,0.04);
+      --feature-border: rgba(255,255,255,0.09);
+      --toggle-bg: rgba(255,255,255,0.08);
+      --toggle-border: rgba(255,255,255,0.15);
+      --orb1: rgba(109,40,217,0.25);
+      --orb2: rgba(30,58,138,0.25);
+      --orb3: rgba(157,23,77,0.18);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.4s ease;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(110px);
+      pointer-events: none;
+      z-index: 0;
+      transition: background 0.4s ease;
+    }
+    .orb-1 { width: 520px; height: 520px; background: var(--orb1); top: -160px; left: -160px; }
+    .orb-2 { width: 420px; height: 420px; background: var(--orb2); bottom: -120px; right: 40px; }
+    .orb-3 { width: 320px; height: 320px; background: var(--orb3); top: 38%; right: -90px; }
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px; right: 24px;
+      z-index: 1000;
+      width: 46px; height: 46px;
+      background: var(--toggle-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--toggle-border);
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .theme-toggle:hover { transform: scale(1.08); }
+
+    .hero-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 90%;
+      max-width: 720px;
+      padding: 20px 0;
+    }
+
+    .hero {
+      background: var(--glass);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      padding: 60px 72px;
+      text-align: center;
+      box-shadow: var(--glass-shadow);
+      transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent-text);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 18px;
+      border-radius: 999px;
+      margin-bottom: 28px;
+      letter-spacing: 0.04em;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    h1 {
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+      margin-bottom: 18px;
+      letter-spacing: -0.5px;
+      transition: color 0.3s;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 48px;
+      transition: color 0.3s;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 48px;
+    }
+
+    .feature-card {
+      background: var(--feature-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--feature-border);
+      border-radius: 18px;
+      padding: 28px 16px;
+      text-align: center;
+      transition: all 0.25s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(99,102,241,0.18);
+    }
+
+    .feature-icon { font-size: 32px; margin-bottom: 12px; }
+
+    .feature-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      transition: color 0.3s;
+    }
+
+    .feature-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      transition: color 0.3s;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 17px 52px;
+      border-radius: 14px;
+      text-decoration: none;
+      box-shadow: 0 4px 24px rgba(99,102,241,0.42);
+      transition: all 0.22s ease;
+      letter-spacing: 0.01em;
+    }
+    .cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 36px rgba(99,102,241,0.55);
+    }
+  </style>
+  <script>
+    (function() {
+      const t = localStorage.getItem('kim-theme');
+      if (t === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="다크/라이트 모드 전환"></button>
+
+  <div class="hero-wrapper">
+    <div class="hero">
+      <div class="badge">AI 업무 비서</div>
+      <h1>김비서를 소개합니다</h1>
+      <p class="subtitle">
+        바쁜 하루, 놓치는 것 없이 — 김비서가 할 일, 일정, 프로젝트를<br>한 화면에 깔끔하게 정리해드립니다.
+      </p>
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <div class="feature-title">업무 관리</div>
+          <div class="feature-desc">우선순위별 할 일 목록을 한눈에 파악하고 체크합니다</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📅</div>
+          <div class="feature-title">일정 정리</div>
+          <div class="feature-desc">이번 주 월~금 일정을 표로 정리해 놓치지 않습니다</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">성과 요약</div>
+          <div class="feature-desc">프로젝트 진행률과 매출 현황을 실시간으로 확인합니다</div>
+        </div>
+      </div>
+      <a href="dashboard.html" class="cta-btn">내 대시보드 보기 →</a>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('kim-theme', isDark ? 'dark' : 'light');
+      updateIcon();
+    }
+    function updateIcon() {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+    }
+    updateIcon();
+  </script>
+</body>
+</html>

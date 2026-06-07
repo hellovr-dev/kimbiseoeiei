@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>매출 데이터 차트</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      padding: 0 24px 48px;
+      color: #1e2a3a;
+    }
+
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .page-title { font-size: 26px; font-weight: 800; color: #1e2a3a; }
+    .page-sub   { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+    .source-tag {
+      background: #dbeafe;
+      color: #2563eb;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 999px;
+    }
+
+    /* Summary */
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .s-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+    }
+    .s-card.hl { background: linear-gradient(135deg, #2563eb, #38bdf8); }
+    .s-label { font-size: 12px; color: #94a3b8; margin-bottom: 6px; }
+    .s-card.hl .s-label { color: rgba(255,255,255,0.75); }
+    .s-val { font-size: 22px; font-weight: 800; color: #1e2a3a; }
+    .s-card.hl .s-val { color: #fff; }
+    .s-unit { font-size: 13px; font-weight: 500; color: #94a3b8; }
+    .s-card.hl .s-unit { color: rgba(255,255,255,0.7); }
+
+    /* Chart cards */
+    .chart-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 32px 24px;
+      box-shadow: 0 1px 12px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+    .chart-head { margin-bottom: 4px; }
+    .chart-title { font-size: 17px; font-weight: 700; color: #1e2a3a; }
+    .chart-sub   { font-size: 13px; color: #94a3b8; margin-bottom: 20px; }
+    .chart-area  { width: 100%; position: relative; }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .legend-line {
+      width: 20px; height: 3px;
+      border-radius: 2px;
+      background: #3b82f6;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: fixed;
+      background: #1e2a3a;
+      color: #fff;
+      padding: 9px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s;
+      z-index: 9999;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+    .tooltip.show { opacity: 1; }
+    .tip-date  { font-size: 11px; color: #7dd3fc; margin-bottom: 2px; }
+    .tip-val   { font-size: 15px; font-weight: 800; }
+
+    svg { overflow: visible; display: block; }
+    .hover-area { cursor: crosshair; }
+
+    /* Tab Navigation */
+    .tab-nav {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 32px;
+      display: flex;
+      gap: 2px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      overflow-x: auto;
+      scrollbar-width: none;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+    }
+    .tab-nav::-webkit-scrollbar { display: none; }
+    .tab-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 16px;
+      height: 44px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-item:hover { color: #6366f1; }
+    .tab-item.active { color: #6366f1; border-bottom-color: #6366f1; }
+  </style>
+</head>
+<body>
+  <nav class="tab-nav">
+    <a href="dashboard.html"      class="tab-item">🏠 대시보드</a>
+    <a href="meeting-result.html" class="tab-item">📋 회의록</a>
+    <a href="chart.html"          class="tab-item">📊 매출 현황</a>
+    <a href="diagram.html"        class="tab-item">🔄 업무 프로세스</a>
+    <a href="report.html"         class="tab-item">🔍 사이트 분석</a>
+  </nav>
+  <div class="tooltip" id="tooltip">
+    <div class="tip-date"  id="tipDate"></div>
+    <div class="tip-val"   id="tipVal"></div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">📊 매출 데이터 분석</div>
+        <div class="page-sub">2026년 1–2월 · 30건 거래</div>
+      </div>
+      <div class="source-tag">김비서-데이터/매출데이터.csv</div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="summary-row">
+      <div class="s-card hl">
+        <div class="s-label">누적 총매출</div>
+        <div class="s-val">7,101<span class="s-unit">만원</span></div>
+      </div>
+      <div class="s-card">
+        <div class="s-label">1월 매출</div>
+        <div class="s-val">4,650<span class="s-unit">만원</span></div>
+      </div>
+      <div class="s-card">
+        <div class="s-label">2월 매출 (현재)</div>
+        <div class="s-val">2,451<span class="s-unit">만원</span></div>
+      </div>
+      <div class="s-card">
+        <div class="s-label">최고 일매출</div>
+        <div class="s-val">1,011<span class="s-unit">만원</span></div>
+      </div>
+    </div>
+
+    <!-- Line chart -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">월별 매출 추이</div>
+      </div>
+      <div class="chart-sub">거래일별 일일 매출 합계 (단위: 만원)</div>
+      <div class="chart-area" id="lineArea"></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line"></div> 일일 매출액</div>
+        <div class="legend-item" style="color:#94a3b8">┆ 월 구분선</div>
+      </div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">제품별 매출 비교</div>
+      </div>
+      <div class="chart-sub">1–2월 누적 제품별 총매출 (단위: 만원)</div>
+      <div class="chart-area" id="barArea"></div>
+      <div class="legend" id="barLegend"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Formatters ──
+    const comma  = n => n.toLocaleString('ko-KR');
+    const toMan  = n => Math.round(n / 10000).toLocaleString('ko-KR');
+
+    // ── Data ──
+    const daily = [
+      { date: '1/5',  label: '1월 5일',  total: 7075000 },
+      { date: '1/8',  label: '1월 8일',  total: 8413000 },
+      { date: '1/12', label: '1월 12일', total: 4135000 },
+      { date: '1/15', label: '1월 15일', total: 8122000 },
+      { date: '1/19', label: '1월 19일', total: 5060000 },
+      { date: '1/22', label: '1월 22일', total: 9029000 },
+      { date: '1/26', label: '1월 26일', total: 4665000 },
+      { date: '2/1',  label: '2월 1일',  total: 10110000 },
+      { date: '2/5',  label: '2월 5일',  total: 6195000 },
+      { date: '2/10', label: '2월 10일', total: 8202000 },
+    ];
+
+    const products = [
+      { name: '무선 이어폰',     total: 28836000, color: '#2563eb' },
+      { name: '텀블러',          total: 11525000, color: '#10b981' },
+      { name: '블루투스 스피커', total: 9600000,  color: '#0ea5e9' },
+      { name: '보조배터리',      total: 9030000,  color: '#06b6d4' },
+      { name: '에코백',          total: 6165000,  color: '#34d399' },
+      { name: '무선 충전기',     total: 5850000,  color: '#38bdf8' },
+    ];
+
+    // ── Tooltip ──
+    const tip      = document.getElementById('tooltip');
+    const tipDate  = document.getElementById('tipDate');
+    const tipVal   = document.getElementById('tipVal');
+
+    function showTip(e, date, val) {
+      tipDate.textContent = date;
+      tipVal.textContent  = comma(val) + '원';
+      tip.classList.add('show');
+      posTip(e);
+    }
+    function posTip(e) {
+      tip.style.left = (e.clientX + 16) + 'px';
+      tip.style.top  = (e.clientY - 42) + 'px';
+    }
+    function hideTip() { tip.classList.remove('show'); }
+
+    // ── Nice ticks ──
+    function niceTicks(maxVal, count) {
+      const raw  = maxVal / count;
+      const exp  = Math.pow(10, Math.floor(Math.log10(raw)));
+      const nice = [1, 2, 2.5, 5, 10].map(f => f * exp).find(f => f >= raw) || exp * 10;
+      const arr  = [];
+      for (let i = 0; i <= count; i++) arr.push(i * nice);
+      return arr;
+    }
+
+    // ── Line Chart ──
+    function drawLine() {
+      const cont = document.getElementById('lineArea');
+      const W = cont.clientWidth || 820;
+      const H = 300;
+      const m = { t: 28, r: 30, b: 48, l: 76 };
+      const cW = W - m.l - m.r;
+      const cH = H - m.t - m.b;
+
+      const maxV = Math.max(...daily.map(d => d.total));
+      const ticks = niceTicks(maxV, 5);
+      const dMax  = ticks[ticks.length - 1];
+
+      const xOf = i => m.l + (i / (daily.length - 1)) * cW;
+      const yOf = v => m.t + cH - (v / dMax) * cH;
+
+      let s = `<svg width="${W}" height="${H}">`;
+
+      // Gradient defs
+      s += `<defs>
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#3b82f6" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+        </linearGradient>
+      </defs>`;
+
+      // Y grid + labels
+      ticks.forEach(v => {
+        const y = yOf(v);
+        s += `<line x1="${m.l}" y1="${y}" x2="${m.l + cW}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+        s += `<text x="${m.l - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#94a3b8">${toMan(v)}</text>`;
+      });
+
+      // Y unit
+      s += `<text x="${m.l - 58}" y="${m.t + cH / 2 + 4}" text-anchor="middle" font-size="11" fill="#94a3b8" transform="rotate(-90,${m.l - 58},${m.t + cH / 2})">만원</text>`;
+
+      // Month divider (between 1/26 and 2/1, i=6→7)
+      const divX = (xOf(6) + xOf(7)) / 2;
+      s += `<line x1="${divX}" y1="${m.t}" x2="${divX}" y2="${m.t + cH}" stroke="#bfdbfe" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+      s += `<text x="${xOf(3)}" y="${m.t - 10}" text-anchor="middle" font-size="11" font-weight="600" fill="#94a3b8">1월</text>`;
+      s += `<text x="${xOf(8)}" y="${m.t - 10}" text-anchor="middle" font-size="11" font-weight="600" fill="#3b82f6">2월</text>`;
+
+      // X labels
+      daily.forEach((d, i) => {
+        s += `<text x="${xOf(i)}" y="${m.t + cH + 18}" text-anchor="middle" font-size="11" fill="#94a3b8">${d.date}</text>`;
+      });
+
+      // Area fill
+      let areaD = `M ${xOf(0)} ${m.t + cH}`;
+      daily.forEach((d, i) => { areaD += ` L ${xOf(i)} ${yOf(d.total)}`; });
+      areaD += ` L ${xOf(daily.length - 1)} ${m.t + cH} Z`;
+      s += `<path d="${areaD}" fill="url(#areaGrad)"/>`;
+
+      // Smooth line (cubic bezier)
+      let lineD = `M ${xOf(0)} ${yOf(daily[0].total)}`;
+      daily.forEach((d, i) => {
+        if (i === 0) return;
+        const x0 = xOf(i - 1), y0 = yOf(daily[i - 1].total);
+        const x1 = xOf(i),     y1 = yOf(d.total);
+        const cx = (x0 + x1) / 2;
+        lineD += ` C ${cx},${y0} ${cx},${y1} ${x1},${y1}`;
+      });
+      s += `<path d="${lineD}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linejoin="round"/>`;
+
+      // Visible dots + invisible hover targets
+      daily.forEach((d, i) => {
+        const x = xOf(i), y = yOf(d.total);
+        s += `<circle cx="${x}" cy="${y}" r="4" fill="#3b82f6" stroke="#fff" stroke-width="2.5"/>`;
+        s += `<circle cx="${x}" cy="${y}" r="16" fill="transparent" class="hover-area"
+                onmouseover="showTip(event,'${d.label}',${d.total})"
+                onmousemove="posTip(event)"
+                onmouseout="hideTip()"/>`;
+      });
+
+      // Axes
+      s += `<line x1="${m.l}" y1="${m.t}" x2="${m.l}" y2="${m.t + cH}" stroke="#e2e8f0" stroke-width="1"/>`;
+      s += `<line x1="${m.l}" y1="${m.t + cH}" x2="${m.l + cW}" y2="${m.t + cH}" stroke="#e2e8f0" stroke-width="1"/>`;
+
+      s += `</svg>`;
+      cont.innerHTML = s;
+    }
+
+    // ── Bar Chart ──
+    function drawBar() {
+      const cont = document.getElementById('barArea');
+      const W = cont.clientWidth || 820;
+      const H = 300;
+      const m = { t: 36, r: 30, b: 56, l: 76 };
+      const cW = W - m.l - m.r;
+      const cH = H - m.t - m.b;
+
+      const n    = products.length;
+      const slot = cW / n;
+      const bW   = slot * 0.52;
+      const maxV = products[0].total;                    // already sorted desc
+      const ticks = niceTicks(maxV, 5);
+      const dMax  = ticks[ticks.length - 1];
+
+      const xCtr = i => m.l + i * slot + slot / 2;
+      const yOf  = v => m.t + cH - (v / dMax) * cH;
+      const barH = v => (v / dMax) * cH;
+
+      let s = `<svg width="${W}" height="${H}">`;
+
+      // Gradient defs per product
+      s += `<defs>`;
+      products.forEach((p, i) => {
+        s += `<linearGradient id="bg${i}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="${p.color}" stop-opacity="1"/>
+          <stop offset="100%" stop-color="${p.color}" stop-opacity="0.55"/>
+        </linearGradient>`;
+      });
+      s += `</defs>`;
+
+      // Y grid + labels
+      ticks.forEach(v => {
+        const y = yOf(v);
+        s += `<line x1="${m.l}" y1="${y}" x2="${m.l + cW}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+        s += `<text x="${m.l - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#94a3b8">${toMan(v)}</text>`;
+      });
+      s += `<text x="${m.l - 58}" y="${m.t + cH / 2 + 4}" text-anchor="middle" font-size="11" fill="#94a3b8" transform="rotate(-90,${m.l - 58},${m.t + cH / 2})">만원</text>`;
+
+      // Bars + labels
+      products.forEach((p, i) => {
+        const cx = xCtr(i);
+        const bx = cx - bW / 2;
+        const by = yOf(p.total);
+        const bh = barH(p.total);
+        const r  = Math.min(7, bW / 3);
+
+        // Rounded-top bar
+        s += `<path d="M ${bx + r},${by} Q ${bx},${by} ${bx},${by + r} L ${bx},${by + bh} L ${bx + bW},${by + bh} L ${bx + bW},${by + r} Q ${bx + bW},${by} ${bx + bW - r},${by} Z"
+                fill="url(#bg${i})"
+                onmouseover="showTip(event,'${p.name}',${p.total})"
+                onmousemove="posTip(event)"
+                onmouseout="hideTip()"
+                style="cursor:pointer"/>`;
+
+        // Value on top
+        s += `<text x="${cx}" y="${by - 7}" text-anchor="middle" font-size="11" font-weight="700" fill="${p.color}">${toMan(p.total)}만</text>`;
+
+        // X label (2-line for long names)
+        const parts = p.name.split(' ');
+        if (parts.length >= 2) {
+          s += `<text x="${cx}" y="${m.t + cH + 18}" text-anchor="middle" font-size="11" fill="#64748b">${parts[0]}</text>`;
+          s += `<text x="${cx}" y="${m.t + cH + 32}" text-anchor="middle" font-size="11" fill="#64748b">${parts.slice(1).join(' ')}</text>`;
+        } else {
+          s += `<text x="${cx}" y="${m.t + cH + 22}" text-anchor="middle" font-size="11" fill="#64748b">${p.name}</text>`;
+        }
+      });
+
+      // Axes
+      s += `<line x1="${m.l}" y1="${m.t}" x2="${m.l}" y2="${m.t + cH}" stroke="#e2e8f0" stroke-width="1"/>`;
+      s += `<line x1="${m.l}" y1="${m.t + cH}" x2="${m.l + cW}" y2="${m.t + cH}" stroke="#e2e8f0" stroke-width="1"/>`;
+
+      s += `</svg>`;
+      cont.innerHTML = s;
+
+      // Legend
+      const leg = document.getElementById('barLegend');
+      leg.innerHTML = products.map(p =>
+        `<div class="legend-item"><div class="legend-dot" style="background:${p.color}"></div>${p.name}</div>`
+      ).join('');
+    }
+
+    // ── Init + resize ──
+    drawLine();
+    drawBar();
+    window.addEventListener('resize', () => { drawLine(); drawBar(); });
+  </script>
+  <script>
+    const _p = location.pathname.split('/').pop();
+    document.querySelectorAll('.tab-item').forEach(a => {
+      if (a.getAttribute('href') === _p) a.classList.add('active');
+    });
+  </script>
+</body>
+</html>

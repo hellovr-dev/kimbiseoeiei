@@ -1,0 +1,93 @@
+<svg width="800" height="200" viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Drop shadow -->
+    <filter id="drop" x="-15%" y="-30%" width="130%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00000018"/>
+    </filter>
+    <!-- Arrowhead marker -->
+    <marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6"
+            markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M 0,1 L 11,6 L 0,11 Z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="200" fill="#F0F4FF"/>
+
+  <!-- ───────── STEP 01 : 기획 ───────── -->
+  <rect x="40" y="58" width="120" height="84" rx="16"
+        fill="#DBEAFE" stroke="#BFDBFE" stroke-width="1.5" filter="url(#drop)"/>
+  <!-- Step badge -->
+  <rect x="62" y="72" width="76" height="19" rx="9.5" fill="#BFDBFE"/>
+  <text x="100" y="85" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="10" font-weight="700" fill="#2563EB">STEP 01</text>
+  <!-- Label -->
+  <text x="100" y="122" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="20" font-weight="800" fill="#1E40AF">기획</text>
+
+  <!-- Arrow 1 -->
+  <line x1="163" y1="100" x2="188" y2="100"
+        stroke="#94A3B8" stroke-width="2.5"
+        stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- ───────── STEP 02 : 제작 ───────── -->
+  <rect x="190" y="58" width="120" height="84" rx="16"
+        fill="#D1FAE5" stroke="#A7F3D0" stroke-width="1.5" filter="url(#drop)"/>
+  <rect x="212" y="72" width="76" height="19" rx="9.5" fill="#A7F3D0"/>
+  <text x="250" y="85" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="10" font-weight="700" fill="#059669">STEP 02</text>
+  <text x="250" y="122" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="20" font-weight="800" fill="#065F46">제작</text>
+
+  <!-- Arrow 2 -->
+  <line x1="313" y1="100" x2="338" y2="100"
+        stroke="#94A3B8" stroke-width="2.5"
+        stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- ───────── STEP 03 : 검토 ───────── -->
+  <rect x="340" y="58" width="120" height="84" rx="16"
+        fill="#FEF9C3" stroke="#FDE047" stroke-width="1.5" filter="url(#drop)"/>
+  <rect x="362" y="72" width="76" height="19" rx="9.5" fill="#FEF08A"/>
+  <text x="400" y="85" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="10" font-weight="700" fill="#CA8A04">STEP 03</text>
+  <text x="400" y="122" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="20" font-weight="800" fill="#854D0E">검토</text>
+
+  <!-- Arrow 3 -->
+  <line x1="463" y1="100" x2="488" y2="100"
+        stroke="#94A3B8" stroke-width="2.5"
+        stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- ───────── STEP 04 : 배포 ───────── -->
+  <rect x="490" y="58" width="120" height="84" rx="16"
+        fill="#FFEDD5" stroke="#FED7AA" stroke-width="1.5" filter="url(#drop)"/>
+  <rect x="512" y="72" width="76" height="19" rx="9.5" fill="#FED7AA"/>
+  <text x="550" y="85" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="10" font-weight="700" fill="#EA580C">STEP 04</text>
+  <text x="550" y="122" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="20" font-weight="800" fill="#9A3412">배포</text>
+
+  <!-- Arrow 4 -->
+  <line x1="613" y1="100" x2="638" y2="100"
+        stroke="#94A3B8" stroke-width="2.5"
+        stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- ───────── STEP 05 : 분석 ───────── -->
+  <rect x="640" y="58" width="120" height="84" rx="16"
+        fill="#EDE9FE" stroke="#DDD6FE" stroke-width="1.5" filter="url(#drop)"/>
+  <rect x="662" y="72" width="76" height="19" rx="9.5" fill="#DDD6FE"/>
+  <text x="700" y="85" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="10" font-weight="700" fill="#7C3AED">STEP 05</text>
+  <text x="700" y="122" text-anchor="middle"
+        font-family="system-ui,-apple-system,sans-serif"
+        font-size="20" font-weight="800" fill="#4C1D95">분석</text>
+</svg>
